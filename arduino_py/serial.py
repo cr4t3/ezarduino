@@ -5,6 +5,18 @@ from .errors import _TypeError, _NotEnoughError, _MoreThanExpectedArgsError
 byte = bytes
 char = str
 
+def ischar(x: any) -> bool:    
+    if isinstance(x, str) and len(x) == 1:
+        return True
+    
+    return False
+
+def isbyte(x: any) -> bool:
+    if isinstance(x, bytes) and len(x) == 1:
+        return True
+    
+    return False
+
 class ArduinoDevice:
     def __init__(self, com: str, baud_rate: int = 9600, timeout: int = 1000, encoding: str = "utf-8") -> None:
         if not isinstance(com, str):
@@ -37,7 +49,7 @@ class ArduinoDevice:
         return
 
     def find(self, target: char, length: int = 0) -> bool:
-        if len(target) != 1 and isinstance(target, str):
+        if not ischar(target):
             raise _TypeError("target", "char (one-length string)")
         
         if not isinstance(length, int):
@@ -53,6 +65,35 @@ class ArduinoDevice:
                 break
 
         return False
+    
+    def findUntil(self, target: char, terminal: char):
+        if not ischar(target):
+            raise _TypeError("target", "char (one-length string)")
+        
+        if not ischar(terminal):
+            raise _TypeError("terminal", "char (one-length string)")
+
+        target_byte = target.encode()
+        terminal_byte = terminal.encode()
+
+        while self.available():
+            current_byte = self.read()
+            if current_byte == target_byte:
+                return True
+
+            if current_byte == terminal_byte:
+                break
+
+        return False
+
+    def flush(self) -> None:
+        self.device.flush()
+
+    def parseFloat(self) -> None:
+        raise NotImplementedError("parseFloat hasn't been implemented yet.")
+
+    def parseInt(self) -> None:
+        raise NotImplementedError("parseInt hasn't been implemented yet.")
 
     def read(self) -> byte:
         if self.device.in_waiting == 0:
@@ -61,7 +102,7 @@ class ArduinoDevice:
         return self.device.read(1)
     
     def readBytes(self, buffer: list[byte], length: int) -> None:
-        if not isinstance(buffer, list) or not all([isinstance(_, byte) for _ in buffer]):
+        if not isinstance(buffer, list) or not all([isbyte(_) for _ in buffer]):
             raise _TypeError("buffer", "list[byte]")
         
         if not isinstance(length, int):
@@ -80,7 +121,7 @@ class ArduinoDevice:
         if not isinstance(character, char) or len(character) != 1:
             raise _TypeError("character", "char (one-length string)")
 
-        if not isinstance(buffer, list) or not (all([isinstance(_, char) and len(_) == 1 for _ in buffer]) or all([isinstance(_, byte) and len(byte) == 1 for _ in buffer])):
+        if not isinstance(buffer, list) or not (all([ischar(_) for _ in buffer]) or all([isbyte(_) for _ in buffer])):
             raise _TypeError("buffer", "list[char] or list[byte]")
 
         if not isinstance(length, int):
@@ -100,7 +141,6 @@ class ArduinoDevice:
         else:
             return None
     
-
     def readString(self) -> str:
         if self.device.in_waiting == 0:
             raise _NotEnoughError("lines")
@@ -172,7 +212,7 @@ class ArduinoDevice:
         else:
             buf: list[char | byte] = args[1]
             len_: int = args[2]
-            if not isinstance(buf, (list, str)) or (isinstance(buf, list) and not (all(isinstance(_, str) for _ in buf) or all(isinstance(_, int) and 0 <= _ <= 255 for _ in buf))):
+            if not isinstance(buf, (list, str)) or (isinstance(buf, list) and not (all(ischar(_) for _ in buf) or all(isinstance(_, int) and 0 <= _ <= 255 for _ in buf))):
                 raise _TypeError("buf", "list[char | byte]")
             
             if not isinstance(len_, int):
@@ -181,7 +221,7 @@ class ArduinoDevice:
             if len_ > len(buf):
                 raise _NotEnoughError("elements")
             
-            if all([isinstance(_, str) for _ in buf]):
+            if all([ischar(_) for _ in buf]):
                 str_buf = "".join(buf)
                 self.device.write(str_buf.encode(self.encoding))
                 return len(str_buf)
