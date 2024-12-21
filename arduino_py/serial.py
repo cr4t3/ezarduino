@@ -142,10 +142,10 @@ class ArduinoDevice:
             return None
     
     def readString(self) -> str:
-        if self.device.in_waiting == 0:
-            raise _NotEnoughError("lines")
+        if self.available == 0:
+            raise _NotEnoughError("text")
         
-        return self.device.readline().decode(self.encoding).strip()
+        return self.device.readall().decode(self.encoding)
     
     def readStringUntil(self, terminator: char) -> str | None:
         if not isinstance(terminator, char) or len(terminator) != 1:
