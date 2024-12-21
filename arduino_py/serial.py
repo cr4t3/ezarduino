@@ -17,6 +17,8 @@ def isbyte(x: any) -> bool:
     
     return False
 
+# TODO: Add docstring to the ArduinoDevice class
+
 class ArduinoDevice:
     def __init__(self, com: str, baud_rate: int = 9600, timeout: int = 1000, encoding: str = "utf-8") -> None:
         if not isinstance(com, str):
@@ -31,22 +33,29 @@ class ArduinoDevice:
         if not isinstance(encoding, str):
             raise _TypeError("encoding", "str")
 
-        self.__ready = False
-        self.device = serial.Serial(com, baud_rate, timeout=timeout/1000)
+        self.__com = com
+        self.__baud_rate = baud_rate
+        self.__timeout = timeout
         self.encoding = encoding
-        time.sleep(2)
-        self.__ready = True
-
+        self.begin()
     
     def available(self) -> int:
         return self.device.in_waiting
     
     def availableForWriting(self) -> int:
-        return self.device.out_waiting()
+        return self.device.out_waiting
 
     def end(self) -> None:
         self.device.close()
         return
+    
+    def begin(self) -> None:
+        self.__ready = False
+        self.device = serial.Serial(self.__com, self.__baud_rate, timeout=self.__timeout/1000)
+        time.sleep(2)
+        self.__ready = True
+
+
 
     def find(self, target: char, length: int = 0) -> bool:
         if not ischar(target):
