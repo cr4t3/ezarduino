@@ -22,7 +22,7 @@
 For now, you can clone the repository and install the library locally:
 
 ```bash
-$ git clone https://github.com/your-repo/arduino-py.git
+$ git clone https://github.com/cr4t3/arduino-py.git
 $ cd arduino-py
 $ pip install .
 ```
