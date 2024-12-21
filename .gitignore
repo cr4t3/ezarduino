@@ -2,3 +2,4 @@ build/
 *.egg-info/
 test.py
 .github/
+__pycache__
