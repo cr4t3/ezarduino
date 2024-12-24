@@ -1,6 +1,7 @@
 import serial
 import time
 from .errors import _TypeError, _NotEnoughError, _MoreThanExpectedArgsError
+import string
 
 byte = bytes
 char = str
@@ -17,7 +18,23 @@ def isbyte(x: any) -> bool:
     
     return False
 
+LookaheadMode = int
+FormatMode = int
+
+# TODO: Add docstring to the ArduinoDevice class
+
 class ArduinoDevice:
+    # Formats
+    DEC = 0
+    HEX = 1
+    OCT = 2
+    BIN = 3
+
+    # Lookahead modes
+    SKIP_ALL = 4
+    SKIP_NONE = 5
+    SKIP_WHITESPACE = 6
+
     def __init__(self, com: str, baud_rate: int = 9600, timeout: int = 1000, encoding: str = "utf-8") -> None:
         if not isinstance(com, str):
             raise _TypeError("com", "str")
@@ -31,24 +48,55 @@ class ArduinoDevice:
         if not isinstance(encoding, str):
             raise _TypeError("encoding", "str")
 
-        self.__ready = False
-        self.device = serial.Serial(com, baud_rate, timeout=timeout/1000)
+        self.__com = com
+        self.__baud_rate = baud_rate
+        self.__timeout = timeout
         self.encoding = encoding
-        time.sleep(2)
-        self.__ready = True
-
+        self.__ready = False
+        self.begin()
     
     def available(self) -> int:
+        """Returns the amount of available bytes to read.
+
+        Returns:
+            int: Amount of available bytes to read
+        """        
         return self.device.in_waiting
     
     def availableForWriting(self) -> int:
-        return self.device.out_waiting()
+        """Returns the amount of available bytes to write
+
+        Returns:
+            int: Amount of available bytes to write
+        """        
+        return self.device.out_waiting
 
     def end(self) -> None:
+        """Closes the ASP connection"""        
         self.device.close()
+        self.__ready = False
         return
+    
+    def begin(self) -> None:
+        """Initializes a connection by the Arduino Serial Port (ASP). Called on __init__ method of this class."""        
+        self.__ready = False
+        self.device = serial.Serial(self.__com, self.__baud_rate, timeout=self.__timeout/1000)
+        time.sleep(2)
+        self.__ready = True
 
     def find(self, target: char, length: int = 0) -> bool:
+        """Finds a character on the ASP.
+
+        Args:
+            target (char): Searched char.
+            length (int, optional): Max length of readabilty of the ASP buffer. Defaults to 0 (for no limit).
+
+        Raises:
+            _TypeError: In case that target is not a char or length is not an int
+
+        Returns:
+            bool: Returns the 'found' state of the character.
+        """        
         if not ischar(target):
             raise _TypeError("target", "char (one-length string)")
         
@@ -66,7 +114,19 @@ class ArduinoDevice:
 
         return False
     
-    def findUntil(self, target: char, terminal: char):
+    def findUntil(self, target: char, terminal: char) -> bool:
+        """Finds a character on the ASP if is not before the terminal char.
+
+        Args:
+            target (char): Character to search on the ASP buffer.
+            terminal (char): Character that ends the search (if target not found) on the ASP buffer.
+
+        Raises:
+            _TypeError: If target or terminal aren't a char.
+
+        Returns:
+            bool: True if target was found before a terminal char or EOF. Returns False otherwise.
+        """        
         if not ischar(target):
             raise _TypeError("target", "char (one-length string)")
         
@@ -87,21 +147,71 @@ class ArduinoDevice:
         return False
 
     def flush(self) -> None:
+        """Waits until all data is written."""
         self.device.flush()
+        
+    # TODO: Add parseInt and parseFloat
+    def parseFloat(self, lookahead: LookaheadMode = SKIP_ALL, ignore: char | None = None):
+        if not isinstance(LookaheadMode) or self.SKIP_ALL <= lookahead <= self.SKIP_WHITESPACE:
+            raise _TypeError("lookahead", "LookaheadMode")
 
-    def parseFloat(self) -> None:
-        raise NotImplementedError("parseFloat hasn't been implemented yet.")
+        if not ischar(ignore) and ignore != None:
+            raise _TypeError("ignore", "char (one-length string) or None")
 
-    def parseInt(self) -> None:
-        raise NotImplementedError("parseInt hasn't been implemented yet.")
+        raise NotImplementedError("parseFloat to be implemented.")
+
+        #match lookahead:
+        #    case self.SKIP_ALL:
+        #        readable = list(string.digits + ".-")
+        #        buffer = []
+        #        x = 0
+        #        while self.available():
+        #            x += 1
+        #            current_char = self.read().decode(self.encoding)
+        #            if current_char in readable:
+        #                buffer.append(current_char)
+        #            else:
+        #                break
+        #
+        #            if current_char == "-" or x > 1:
+        #                readable.remove("-")
+        #            elif current_char == ".":
+        #                readable.remove(".")
+
+
+        #        if not buffer or not any([_ not in [".", "-"] for _ in buffer]) or not buffer.count(".") <= 1 or not buffer.count("-") <= 1:
+        #            return 0.0
+        #        else:
+        #            return float("".join(buffer))
 
     def read(self) -> byte:
+        """Reads one byte from the ASP buffer
+
+        Raises:
+            _NotEnoughError: If there isn't an available byte to read
+
+        Returns:
+            byte: Read byte.
+        """
         if self.device.in_waiting == 0:
             raise _NotEnoughError("bytes")
 
         return self.device.read(1)
     
-    def readBytes(self, buffer: list[byte], length: int) -> None:
+    def readBytes(self, buffer: list[byte], length: int) -> int:
+        """Reads a 'length'-length bytes into buffer
+
+        Args:
+            buffer (list[byte]): Buffer which we have bytes appended.
+            length (int): Amount of bytes to read
+
+        Raises:
+            _TypeError: If buffer is not a list[byte] or length is not int
+            _NotEnoughError: If length is more than available bytes.
+
+        Returns:
+            int: Amount of bytes read
+        """
         if not isinstance(buffer, list) or not all([isbyte(_) for _ in buffer]):
             raise _TypeError("buffer", "list[byte]")
         
@@ -115,9 +225,23 @@ class ArduinoDevice:
                 raise _NotEnoughError("bytes")
             
             buffer.append(self.device.read(1))
-        return start_len - len(buffer)
+        return len(buffer) - start_len
 
-    def readBytesUntil(self, character: char, buffer: list[char | byte], length: int):
+    def readBytesUntil(self, character: char, buffer: list[char | byte], length: int) -> int | None:
+        """Reads bytes until it founds the 'character' on the ASP buffer.
+
+        Args:
+            character (char): Character to terminate.
+            buffer (list[char  |  byte]): Array of char or bytes used as buffer.
+            length (int): Max length to read.
+
+        Raises:
+            _TypeError: If character is not a char, buffer is not a list[char | byte], or length is not a int
+
+        Returns:
+            int: Amount of bytes read to buffer.
+            None: if 
+        """        
         if not isinstance(character, char) or len(character) != 1:
             raise _TypeError("character", "char (one-length string)")
 
@@ -161,19 +285,19 @@ class ArduinoDevice:
         else:
             return None
     
-    def print(self, val: any, format: str = "") -> None:
-        if not isinstance(format, str) or len(format) not in [0, 3]:
-            raise _TypeError("format", "format (3-or-0-length string)")
+    def print(self, val: any, format: FormatMode | None = None) -> None:
+        if not (isinstance(format, FormatMode) or None) or (isinstance(format, FormatMode) and not self.DEC <= format <= self.BIN):
+            raise _TypeError("format", "FormatMode or None")
         
         if format:
             match format:
-                case "DEC":
+                case self.DEC:
                     val = int(val)
-                case "HEX":
+                case self.HEX:
                     val = hex(int(val))
-                case "OCT":
+                case self.OCT:
                     val = oct(int(val))
-                case "BIN":
+                case self.BIN:
                     val = bin(int(val))
         
         self.device.write(str(val).encode(self.encoding))
