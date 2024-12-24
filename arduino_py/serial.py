@@ -36,6 +36,17 @@ class ArduinoDevice:
     SKIP_WHITESPACE = 6
 
     def __init__(self, com: str, baud_rate: int = 9600, timeout: int = 1000, encoding: str = "utf-8") -> None:
+        """Initalize the Arduino Serial Port (ASP) connection.
+
+        Args:
+            com (str): Port name or location to which the Arduino is connected.
+            baud_rate (int, optional): The baud rate which the Arduino is set. Defaults to 9600.
+            timeout (int, optional): Timeout rate in milliseconds. Defaults to 1000.
+            encoding (str, optional): Encoding used to send information. Defaults to "utf-8".
+
+        Raises:
+            _TypeError: If any argument is not the expected type.
+        """        
         if not isinstance(com, str):
             raise _TypeError("com", "str")
         
@@ -51,10 +62,7 @@ class ArduinoDevice:
         self.__com = com
         self.__baud_rate = baud_rate
         self.__timeout = timeout
-        self.__com = com
-        self.__baud_rate = baud_rate
-        self.__timeout = timeout
-        self.encoding = encoding
+        self.__encoding = encoding
         self.__ready = False
         self.begin()
     
@@ -64,6 +72,8 @@ class ArduinoDevice:
         Returns:
             int: Amount of available bytes to read
         """        
+        if not self.__ready:
+            return 0
         return self.device.in_waiting
     
     def availableForWriting(self) -> int:
@@ -72,6 +82,8 @@ class ArduinoDevice:
         Returns:
             int: Amount of available bytes to write
         """        
+        if not self.__ready:
+            return 0
         return self.device.out_waiting
 
     def end(self) -> None:
@@ -155,7 +167,7 @@ class ArduinoDevice:
         
     # TODO: Add parseInt and parseFloat
     def parseFloat(self, lookahead: LookaheadMode = SKIP_ALL, ignore: char | None = None):
-        if not isinstance(LookaheadMode) or self.SKIP_ALL <= lookahead <= self.SKIP_WHITESPACE:
+        if not isinstance(lookahead, LookaheadMode) or self.SKIP_ALL <= lookahead <= self.SKIP_WHITESPACE:
             raise _TypeError("lookahead", "LookaheadMode")
 
         if not ischar(ignore) and ignore != None:
@@ -170,7 +182,7 @@ class ArduinoDevice:
         #        x = 0
         #        while self.available():
         #            x += 1
-        #            current_char = self.read().decode(self.encoding)
+        #            current_char = self.read().decode(self.__encoding)
         #            if current_char in readable:
         #                buffer.append(current_char)
         #            else:
@@ -260,7 +272,7 @@ class ArduinoDevice:
         start_len = len(buffer)
 
         while self.available()-length:
-            read_byte = self.read().decode(self.encoding)
+            read_byte = self.read().decode(self.__encoding)
             buffer.append(read_byte)
             
             if read_byte == character:
@@ -272,7 +284,7 @@ class ArduinoDevice:
         if self.available == 0:
             raise _NotEnoughError("text")
         
-        return self.device.readall().decode(self.encoding)
+        return self.device.readall().decode(self.__encoding)
     
     def readStringUntil(self, terminator: char) -> str | None:
         if not isinstance(terminator, char) or len(terminator) != 1:
@@ -280,7 +292,7 @@ class ArduinoDevice:
 
         buffer = []
         while self.available():
-            read_byte = self.read().decode(self.encoding)
+            read_byte = self.read().decode(self.__encoding)
             buffer.append(read_byte)
             
             if read_byte == terminator:
@@ -303,7 +315,7 @@ class ArduinoDevice:
                 case self.BIN:
                     val = bin(int(val))
         
-        self.device.write(str(val).encode(self.encoding))
+        self.device.write(str(val).encode(self.__encoding))
         return len(val)
 
     def println(self, val: any, format: str = "") -> None:
@@ -325,20 +337,20 @@ class ArduinoDevice:
             raise _MoreThanExpectedArgsError("write", 2, len(args))
         
         if len(args) == 1:
-            if isinstance(args[1], int) and 0 <= args[1] <= 255:
-                val = args[1]
+            if isinstance(args[0], int) and 0 <= args[0] <= 255:
+                val = args[0]
                 self.device.write(val)
                 return 1
-            elif isinstance(args[1], str):
-                str_ = args[1]
-                bytes_str = str_.encode(self.encoding)
+            elif isinstance(args[0], str):
+                str_ = args[0]
+                bytes_str = str_.encode(self.__encoding)
                 self.device.write(bytes_str)
                 return len(bytes_str)
             else:
                 raise _TypeError("val", "int or str")
         else:
-            buf: list[char | byte] = args[1]
-            len_: int = args[2]
+            buf: list[char | byte] = args[0]
+            len_: int = args[1]
             if not isinstance(buf, (list, str)) or (isinstance(buf, list) and not (all(ischar(_) for _ in buf) or all(isinstance(_, int) and 0 <= _ <= 255 for _ in buf))):
                 raise _TypeError("buf", "list[char | byte]")
             
@@ -350,7 +362,7 @@ class ArduinoDevice:
             
             if all([ischar(_) for _ in buf]):
                 str_buf = "".join(buf)
-                self.device.write(str_buf.encode(self.encoding))
+                self.device.write(str_buf.encode(self.__encoding))
                 return len(str_buf)
             else:
                 bytes_buf = bytes(buf)
