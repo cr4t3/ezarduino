@@ -51,6 +51,9 @@ class ArduinoDevice:
         self.__com = com
         self.__baud_rate = baud_rate
         self.__timeout = timeout
+        self.__com = com
+        self.__baud_rate = baud_rate
+        self.__timeout = timeout
         self.encoding = encoding
         self.__ready = False
         self.begin()
