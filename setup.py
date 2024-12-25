@@ -7,8 +7,14 @@ setup(
     description="A basic Arduino connector library.",
     author="Crate",
     author_email="crate.arg@proton.me",
-    url='https://github.com/cr4t3/arduino-py',
+    url='https://github.com/cr4t3/ezarduino',
     install_requires=[
         "pyserial>=3.5"
+    ],
+    license="MIT",
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.12",
+        "Operating System :: OS Independent"
     ]
 )
