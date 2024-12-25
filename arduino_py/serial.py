@@ -165,39 +165,110 @@ class ArduinoDevice:
         """Waits until all data is written."""
         self.device.flush()
         
-    # TODO: Add parseInt and parseFloat
-    def parseFloat(self, lookahead: LookaheadMode = SKIP_ALL, ignore: char | None = None):
+    def parseFloat(self, lookahead: LookaheadMode = SKIP_ALL, ignore: char | None = None) -> float:
+        """Reads a float from the ASP buffer.
+
+        Args:
+            lookahead (LookaheadMode, optional): Lookahead mode. Defaults to SKIP_ALL.
+            ignore (char | None, optional): Character to ignore. Defaults to None.
+
+        Raises:
+            _TypeError: If lookahead is not a LookaheadMode or ignore is not a char or None.
+
+        Returns:
+            float: Read float.
+        """        
         if not isinstance(lookahead, LookaheadMode) or self.SKIP_ALL <= lookahead <= self.SKIP_WHITESPACE:
             raise _TypeError("lookahead", "LookaheadMode")
 
         if not ischar(ignore) and ignore != None:
             raise _TypeError("ignore", "char (one-length string) or None")
 
-        raise NotImplementedError("parseFloat to be implemented.")
+        buffer = []
+        readable = list(string.digits + ".-")
 
-        #match lookahead:
-        #    case self.SKIP_ALL:
-        #        readable = list(string.digits + ".-")
-        #        buffer = []
-        #        x = 0
-        #        while self.available():
-        #            x += 1
-        #            current_char = self.read().decode(self.__encoding)
-        #            if current_char in readable:
-        #                buffer.append(current_char)
-        #            else:
-        #                break
-        #
-        #            if current_char == "-" or x > 1:
-        #                readable.remove("-")
-        #            elif current_char == ".":
-        #                readable.remove(".")
+        def __char_readable(char: char, buffer: list) -> None:
+            buffer.append(char)
+            if char == ".":
+                readable.remove(".")
+            elif char == "-" and len(buffer) > 1:
+                readable.remove("-")
 
+        while self.available():
+            current_char = self.read().decode(self.__encoding)
+            if current_char in readable:
+                __char_readable(current_char, buffer)
+            elif current_char == ignore:
+                continue
+            else:
+                match lookahead:
+                    case self.SKIP_ALL:
+                        continue
+                    case self.SKIP_NONE:
+                        break
+                    case self.SKIP_WHITESPACE:
+                        if current_char.isspace():
+                            continue
+                        else:
+                            break
+        if (
+            not buffer or
+            buffer.count(".") > 1 or
+            buffer.count("-") > 1 or
+            not any(c.isdigit() for c in buffer if c not in [".", "-"])
+        ): return 0.0
+        else: return float("".join(buffer))
+    
+    def parseInt(self, lookahead: LookaheadMode = SKIP_ALL, ignore: char | None = None) -> int:
+        """Reads an integer from the ASP buffer.
 
-        #        if not buffer or not any([_ not in [".", "-"] for _ in buffer]) or not buffer.count(".") <= 1 or not buffer.count("-") <= 1:
-        #            return 0.0
-        #        else:
-        #            return float("".join(buffer))
+        Args:
+            lookahead (LookaheadMode, optional): Lookahead mode. Defaults to SKIP_ALL.
+            ignore (char | None, optional): Character to ignore. Defaults to None.
+
+        Raises:
+            _TypeError: If lookahead is not a LookaheadMode or ignore is not a char or None.
+
+        Returns:
+            int: Read integer.
+        """        
+        if not isinstance(lookahead, LookaheadMode) or self.SKIP_ALL <= lookahead <= self.SKIP_WHITESPACE:
+            raise _TypeError("lookahead", "LookaheadMode")
+
+        if not ischar(ignore) and ignore != None:
+            raise _TypeError("ignore", "char (one-length string) or None")
+
+        buffer = []
+        readable = list(string.digits + "-")
+
+        def __char_readable(char: char, buffer: list) -> None:
+            buffer.append(char)
+            if char == "-" and len(buffer) > 1:
+                readable.remove("-")
+
+        while self.available():
+            current_char = self.read().decode(self.__encoding)
+            if current_char in readable:
+                __char_readable(current_char, buffer)
+            elif current_char == ignore:
+                continue
+            else:
+                match lookahead:
+                    case self.SKIP_ALL:
+                        continue
+                    case self.SKIP_NONE:
+                        break
+                    case self.SKIP_WHITESPACE:
+                        if current_char.isspace():
+                            continue
+                        else:
+                            break
+        if (
+            not buffer or
+            buffer.count("-") > 1 or
+            not any(c.isdigit() for c in buffer if c != "-")
+        ): return 0
+        else: return int("".join(buffer))
 
     def read(self) -> byte:
         """Reads one byte from the ASP buffer
@@ -255,7 +326,7 @@ class ArduinoDevice:
 
         Returns:
             int: Amount of bytes read to buffer.
-            None: if 
+            None: If character wasn't found.
         """        
         if not isinstance(character, char) or len(character) != 1:
             raise _TypeError("character", "char (one-length string)")
@@ -281,12 +352,32 @@ class ArduinoDevice:
             return None
     
     def readString(self) -> str:
+        """Reads all available bytes from the ASP buffer as a string.
+
+        Raises:
+            _NotEnoughError: If there isn't any available byte to read.
+
+        Returns:
+            str: All the bytes read as a string.
+        """        
         if self.available == 0:
             raise _NotEnoughError("text")
         
         return self.device.readall().decode(self.__encoding)
     
     def readStringUntil(self, terminator: char) -> str | None:
+        """Reads all available bytes from the ASP buffer until the terminator char.
+
+        Args:
+            terminator (char): Char which ends the reading.
+
+        Raises:
+            _TypeError: If terminator is not a char.
+
+        Returns:
+            str: All the bytes read until the terminator char.
+            None: If the terminator char wasn't found.
+        """        
         if not isinstance(terminator, char) or len(terminator) != 1:
             raise _TypeError("terminator", "char (one-length string)")
 
@@ -300,7 +391,19 @@ class ArduinoDevice:
         else:
             return None
     
-    def print(self, val: any, format: FormatMode | None = None) -> None:
+    def print(self, val: any, format: FormatMode | None = None) -> int:
+        """Prints a value to the ASP buffer.
+
+        Args:
+            val (any): Value to print.
+            format (FormatMode, optional): Format to print the value. Optional.
+
+        Raises:
+            _TypeError: If format is not a FormatMode or None.
+
+        Returns:
+            int: Length of the printed value.
+        """        
         if not (isinstance(format, FormatMode) or None) or (isinstance(format, FormatMode) and not self.DEC <= format <= self.BIN):
             raise _TypeError("format", "FormatMode or None")
         
@@ -318,21 +421,51 @@ class ArduinoDevice:
         self.device.write(str(val).encode(self.__encoding))
         return len(val)
 
-    def println(self, val: any, format: str = "") -> None:
-        if not isinstance(format, str) or len(format) not in [0, 3]:
-            raise _TypeError("format", "format (3-or-0-length string)")
+    def println(self, val: any, format: FormatMode | None = None) -> int:
+        """Prints a value to the ASP buffer and adds a newline character.
+
+        Args:
+            val (any): Value to print.
+            format (str, optional): Format to print the value. Optional.
+
+        Raises:
+            _TypeError: If format is not a FormatMode or None.
+
+        Returns:
+            int: Length of the printed value.
+        """        
+        if not (isinstance(format, FormatMode) or None) or (isinstance(format, FormatMode) and not self.DEC <= format <= self.BIN):
+            raise _TypeError("format", "FormatMode or None")
 
         val = val + "\r\n"
         self.print(val, format = format)
         return len(val)
     
     def setTimeout(self, time: int) -> None:
+        """Sets the timeout of the ASP connection.
+
+        Args:
+            time (int): Timeout in milliseconds.
+
+        Raises:
+            _TypeError: If time is not an int.
+        """        
         if not isinstance(time, int):
             raise _TypeError("time", "int")
         
         self.device.timeout = time / 1000
 
-    def write(self, *args):
+    def write(self, *args) -> int:
+        """Writes a value to the ASP buffer.
+
+        Raises:
+            _MoreThanExpectedArgsError: If the amount of arguments is more than 2.
+            _TypeError: If the value is not an int or str. If the buffer is not a list[char | byte]. If the length is not an int.
+            _NotEnoughError: If the buffer is not enough to write.
+
+        Returns:
+            int: Length of the written value.
+        """        
         if len(args) == 0 or len(args) > 2:
             raise _MoreThanExpectedArgsError("write", 2, len(args))
         
