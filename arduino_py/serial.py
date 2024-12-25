@@ -21,8 +21,6 @@ def isbyte(x: any) -> bool:
 LookaheadMode = int
 FormatMode = int
 
-# TODO: Add docstring to the ArduinoDevice class
-
 class ArduinoDevice:
     # Formats
     DEC = 0
@@ -279,7 +277,7 @@ class ArduinoDevice:
         Returns:
             byte: Read byte.
         """
-        if self.device.in_waiting == 0:
+        if not self.available():
             raise _NotEnoughError("bytes")
 
         return self.device.read(1)
@@ -306,8 +304,11 @@ class ArduinoDevice:
         
         start_len = len(buffer)
 
+        if not self.available():
+            raise _NotEnoughError("bytes")
+
         for _ in range(length):
-            if self.device.in_waiting == 0:
+            if not self.available():
                 raise _NotEnoughError("bytes")
             
             buffer.append(self.device.read(1))
