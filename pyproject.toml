@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 dynamic=["license"]
-name = "ezarduino_Crate"
+name = "ezarduino"
 version = "1.0.0"
 authors = [
   { name="Crate", email="crate.arg@proton.me" },
