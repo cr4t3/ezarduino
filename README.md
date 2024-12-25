@@ -94,3 +94,6 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 - Python 3.12.1 or newer
 - pyserial 3.5 or newer
+
+## Acknowledgments
+Special thanks to the open-source community for inspiring this project. Let's make Arduino projects even more accessible with Python!
