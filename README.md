@@ -16,7 +16,12 @@
 
 ## Installation
 
-To install `ezarduino`, run the next commands:
+To install `ezarduino` from the PyPi, run the next command:
+```bash
+pip install ezarduino
+```
+
+But to install `ezarduino` from the repo, run the next commands:
 ```bash
 git clone https://github.com/cr4t3/ezarduino.git
 cd ezarduino
@@ -70,16 +75,16 @@ ArduinoDevice(com: str, baud_rate: int = 9600, timeout: int = 1000, encoding: st
 - **`availableForWriting()`**: Returns the number of bytes available for writing.
 - **`end()`**: Closes the serial port connection.
 - **`begin()`**: Initializes the serial port connection.
-- **`find(target: char, length: int = 0)`**: Searches for a character in the serial buffer.
-- **`findUntil(target: char, terminal: char)`**: Searches for a character in the serial buffer until a terminal character is found.
+- **`find(target: str, length: int = 0)`**: Searches for a character in the serial buffer.
+- **`findUntil(target: str, terminal: str)`**: Searches for a character in the serial buffer until a terminal character is found.
 - **`flush()`**: Waits until all data is written to the serial port.
-- **`parseFloat(lookahead: LookaheadMode = SKIP_ALL, ignore: char = None)`**: Reads a float from the serial buffer.
-- **`parseInt(lookahead: LookaheadMode = SKIP_ALL, ignore: char = None)`**: Reads an integer from the serial buffer.
+- **`parseFloat(lookahead: LookaheadMode = SKIP_ALL, ignore: strs = None)`**: Reads a float from the serial buffer.
+- **`parseInt(lookahead: LookaheadMode = SKIP_ALL, ignore: str = None)`**: Reads an integer from the serial buffer.
 - **`read()`**: Reads one byte from the serial buffer.
 - **`readBytes(buffer: list[byte], length: int)`**: Reads a specified number of bytes into a buffer.
-- **`readBytesUntil(character: char, buffer: list[char or byte], length: int)`**: Reads bytes into a buffer until a specified character is found.
+- **`readBytesUntil(character: str, buffer: list[str or byte], length: int)`**: Reads bytes into a buffer until a specified character is found.
 - **`readString()`**: Reads all available bytes from the serial buffer as a string.
-- **`readStringUntil(terminator: char)`**: Reads bytes from the serial buffer until a terminator character is found.
+- **`readStringUntil(terminator: str)`**: Reads bytes from the serial buffer until a terminator character is found.
 - **`print(val: any, format: FormatMode = None)`**: Prints a value to the serial buffer.
 - **`println(val: any, format: FormatMode = None)`**: Prints a value to the serial buffer followed by a newline.
 - **`setTimeout(time: int)`**: Sets the timeout for the serial port connection.
