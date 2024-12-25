@@ -1,8 +1,8 @@
-# arduino-py
+# ezarduino
 ![Static Badge](https://img.shields.io/badge/3.12.1-blue?style=for-the-badge&logo=python&logoColor=white&label=python)
 ![Static Badge](https://img.shields.io/badge/3.5-green?style=for-the-badge&logo=python&logoColor=white&label=pyserial)
 
-`arduino-py` is a Python library designed to facilitate communication between Python and Arduino devices via the Arduino Serial Port (ASP). It provides a Python-based reconstruction of Arduino's Serial class, making it easier to send and receive data between your Python scripts and Arduino projects.
+`ezarduino` is a Python library designed to facilitate communication between Python and Arduino devices via the Arduino Serial Port (ASP). It provides a Python-based reconstruction of Arduino's Serial class, making it easier to send and receive data between your Python scripts and Arduino projects.
 
 ## Features
 
@@ -16,21 +16,21 @@
 
 ## Installation
 
-To install `arduino-py`, run the next commands:
+To install `ezarduino`, run the next commands:
 ```bash
-git clone https://github.com/cr4t3/arduino-py.git
-cd arduino-py
+git clone https://github.com/cr4t3/ezarduino.git
+cd ezarduino
 pip install .
 ```
 
 ## Usage
 
-Here is a quick example to demonstrate the basic functionality of `arduino-py`:
+Here is a quick example to demonstrate the basic functionality of `ezarduino`:
 
 ### Example: Sending and Receiving Data
 
 ```python
-from arduino_py import ArduinoDevice
+from ezarduino import ArduinoDevice
 
 # Connect to Arduino (adjust COM por, baud rate and timeout as necessary)
 arduino = ArduinoDevice(com="COM3", baud_rate=9600, timeout=1000)
@@ -78,7 +78,7 @@ ArduinoDevice(com: str, baud_rate: int = 9600, timeout: int = 1000, encoding: st
 
 ## Contributing
 
-We welcome contributions! If you would like to contribute to `arduino-py`, please follow these steps:
+We welcome contributions! If you would like to contribute to `ezarduino`, please follow these steps:
 
 1. Fork the repository.
 2. Create a new branch for your feature or bugfix.
