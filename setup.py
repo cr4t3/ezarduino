@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="arduino-py",
+    name="ezarduino",
     version="1.0.0",
     packages=find_packages(),
     description="A basic Arduino connector library.",
