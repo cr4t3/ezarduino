@@ -1,4 +1,6 @@
 # arduino-py
+![Static Badge](https://img.shields.io/badge/3.12.1-blue?style=for-the-badge&logo=python&logoColor=white&label=python)
+![Static Badge](https://img.shields.io/badge/3.5-green?style=for-the-badge&logo=python&logoColor=white&label=pyserial)
 
 `arduino-py` is a Python library designed to facilitate communication between Python and Arduino devices via the Arduino Serial Port (ASP). It provides a Python-based reconstruction of Arduino's Serial class, making it easier to send and receive data between your Python scripts and Arduino projects.
 
