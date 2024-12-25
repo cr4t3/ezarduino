@@ -66,15 +66,24 @@ ArduinoDevice(com: str, baud_rate: int = 9600, timeout: int = 1000, encoding: st
 
 #### Methods
 
-- **`end()`**: Closes the serial connection.
 - **`available()`**: Returns the number of bytes available for reading.
-- **`availableForWriting()`**: Returns the number of bytes that can be written.
-- **`readBytes(buffer: list, length: int)`**: Reads `length` bytes into a given buffer.
-- **`read()`**: Reads a single byte.
-- **`readString()`**: Reads a string from the Arduino (until a newline is received).
-- **`print(text: str)`**: Sends a string to the Arduino.
-- **`println(text: str)`**: Sends a string followed by a newline character.
-- Other methods.
+- **`availableForWriting()`**: Returns the number of bytes available for writing.
+- **`end()`**: Closes the serial port connection.
+- **`begin()`**: Initializes the serial port connection.
+- **`find(target: char, length: int = 0)`**: Searches for a character in the serial buffer.
+- **`findUntil(target: char, terminal: char)`**: Searches for a character in the serial buffer until a terminal character is found.
+- **`flush()`**: Waits until all data is written to the serial port.
+- **`parseFloat(lookahead: LookaheadMode = SKIP_ALL, ignore: char = None)`**: Reads a float from the serial buffer.
+- **`parseInt(lookahead: LookaheadMode = SKIP_ALL, ignore: char = None)`**: Reads an integer from the serial buffer.
+- **`read()`**: Reads one byte from the serial buffer.
+- **`readBytes(buffer: list[byte], length: int)`**: Reads a specified number of bytes into a buffer.
+- **`readBytesUntil(character: char, buffer: list[char or byte], length: int)`**: Reads bytes into a buffer until a specified character is found.
+- **`readString()`**: Reads all available bytes from the serial buffer as a string.
+- **`readStringUntil(terminator: char)`**: Reads bytes from the serial buffer until a terminator character is found.
+- **`print(val: any, format: FormatMode = None)`**: Prints a value to the serial buffer.
+- **`println(val: any, format: FormatMode = None)`**: Prints a value to the serial buffer followed by a newline.
+- **`setTimeout(time: int)`**: Sets the timeout for the serial port connection.
+- **`write(val) OR write(str) OR write(buf, len)`**: Writes data to the serial buffer.
 
 ## Contributing
 
