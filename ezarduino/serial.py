@@ -405,7 +405,7 @@ class ArduinoDevice:
         Returns:
             int: Length of the printed value.
         """        
-        if not (isinstance(format, FormatMode) or None) or (isinstance(format, FormatMode) and not self.DEC <= format <= self.BIN):
+        if not (isinstance(format, FormatMode) or format == None) or (isinstance(format, FormatMode) and not self.DEC <= format <= self.BIN):
             raise _TypeError("format", "FormatMode or None")
         
         if format:
